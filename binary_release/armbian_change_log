@@ -1,0 +1,6 @@
+/etc/init.d/brcm4330-patch; @64
+
+  log_action_begin_msg  "Start pushing BRCM4330 bluetooth firmware to device and waiting 5 sec to complete"
+- /usr/local/bin/brcm_patchram_plus -d --patchram /lib/firmware/brcm/bcm4330.hcd  --baudrate 3000000 --use_baudrate_for_download /dev/$PORT --enable_hci --no2bytes --tosleep 1000 $MAC_OPTIONS  > /tmp/brcm4330.firmware > /dev/null 2>&1 &
+- sleep 5
+  case "$?"
