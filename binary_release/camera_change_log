@@ -16,6 +16,11 @@ Prepared by, Yuefeng Zhu.
 		a. enable AWB, but disable awb gain: set 0x5001 to x01, set 0x5002 to x40
 		b. enable LENC, and adjust its paramters: set 0x5000 to 0x86 (or 0xFF), set 0x5800 to 0x5823 (green) to x00 and set 0x5824 to 0x583c (blue and red) to 0xFF,  
 
+	3. change gain:
+		a. change AE_Target,
+		b. orginal value was 44, I changed to 52, higher value can be applied
+		c. line 2318: static int AE_low, AE_high, AE_Target = 52;
+
 2. drivers/mxc/mipi/mxc_mipi_csi2.c: @ line 284: 
 
 	+   tst_ctrl1 = 0x00000014; // change clock
