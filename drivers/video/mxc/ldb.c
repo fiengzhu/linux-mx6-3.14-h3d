@@ -161,8 +161,8 @@ static struct fb_videomode ldb_modedb[] = {
 	 FB_MODE_IS_DETAILED,},
 	{
 	 "LDB-320P60", 60, 320, 480, 125000,
-	 3, 3,
-	 2, 4,
+	 2, 2,
+	 2, 2,
 	 2, 2,
 	 0,
 	 FB_VMODE_NONINTERLACED,
