@@ -231,7 +231,25 @@
 		fs-range = <0>;
 	};
 
-
+	/* LSM9DS1 accelerometer/gyroscope sensor */
+	lsm9ds1_acc_gyr:lsm9ds1_acc_gyr@0x6a {
+		compatible = "st,lsm9ds1-acc-gyr";
+		reg = <0x6A>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_imu_acc>;
+		gpios = <&gpio3 30 GPIO_ACTIVE_LOW>, /* INT1 */
+		        <&gpio3 26 GPIO_ACTIVE_LOW>; /* INT2 */
+		rot-matrix = /bits/ 16 <(1) (0) (0)
+			(0) (1) (0)
+			(0) (0) (1)>;
+		g-poll-interval = <100>;
+		g-min-interval = <2>;
+		g-fs-range = <0>;
+		x-poll-interval = <100>;
+		x-min-interval = <1>;
+		x-fs-range = <0>;
+		aa-filter-bw = <0>;
+	};
 };
 
 
