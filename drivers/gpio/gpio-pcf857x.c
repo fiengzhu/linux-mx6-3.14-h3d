@@ -101,6 +101,15 @@ struct pcf857x {
 /*-------------------------------------------------------------------------*/
 
 /* Talk to 8-bit I/O expander */
+static int i2c_write_le8tca(struct i2c_client *client, unsigned data)
+{
+	return (int)i2c_smbus_write_byte_data(client, 0x01, data);
+}
+
+static int i2c_read_le8tca(struct i2c_client *client)
+{
+	return (int)i2c_smbus_read_byte_data(client, 0x00);
+}
 
 static int i2c_write_le8(struct i2c_client *client, unsigned data)
 {
@@ -136,6 +145,38 @@ static int i2c_read_le16(struct i2c_client *client)
 
 /*-------------------------------------------------------------------------*/
 
+static int pcf857x_input_tca(struct gpio_chip *chip, unsigned offset)
+{
+	struct pcf857x	*gpio = container_of(chip, struct pcf857x, chip);
+	int		status;
+
+	mutex_lock(&gpio->lock);
+	gpio->out |= (1 << offset);
+	//status = gpio->write(gpio->client, gpio->out);
+	status = i2c_smbus_write_byte_data(gpio->client, 0x03, gpio->out);
+	mutex_unlock(&gpio->lock);
+
+	return status;
+}
+
+static int pcf857x_output_tca(struct gpio_chip *chip, unsigned offset, int value)
+{
+	struct pcf857x	*gpio = container_of(chip, struct pcf857x, chip);
+	unsigned	bit = 1 << offset;
+	int		status;
+
+	mutex_lock(&gpio->lock);
+	if (value)
+		gpio->out |= bit;
+	else
+		gpio->out &= ~bit;
+	//status = gpio->write(gpio->client, gpio->out);
+	status = i2c_smbus_write_byte_data(gpio->client, 0x03, gpio->out);
+	mutex_unlock(&gpio->lock);
+
+	return status;
+}
+
 static int pcf857x_input(struct gpio_chip *chip, unsigned offset)
 {
 	struct pcf857x	*gpio = container_of(chip, struct pcf857x, chip);
@@ -147,15 +188,6 @@ static int pcf857x_input(struct gpio_chip *chip, unsigned offset)
 	mutex_unlock(&gpio->lock);
 
 	return status;
-}
-
-static int pcf857x_get(struct gpio_chip *chip, unsigned offset)
-{
-	struct pcf857x	*gpio = container_of(chip, struct pcf857x, chip);
-	int		value;
-
-	value = gpio->read(gpio->client);
-	return (value < 0) ? 0 : (value & (1 << offset));
 }
 
 static int pcf857x_output(struct gpio_chip *chip, unsigned offset, int value)
@@ -173,6 +205,15 @@ static int pcf857x_output(struct gpio_chip *chip, unsigned offset, int value)
 	mutex_unlock(&gpio->lock);
 
 	return status;
+}
+
+static int pcf857x_get(struct gpio_chip *chip, unsigned offset)
+{
+	struct pcf857x	*gpio = container_of(chip, struct pcf857x, chip);
+	int		value;
+
+	value = gpio->read(gpio->client);
+	return (value < 0) ? 0 : (value & (1 << offset));
 }
 
 static void pcf857x_set(struct gpio_chip *chip, unsigned offset, int value)
@@ -310,8 +351,6 @@ static int pcf857x_probe(struct i2c_client *client,
 	gpio->chip.owner		= THIS_MODULE;
 	gpio->chip.get			= pcf857x_get;
 	gpio->chip.set			= pcf857x_set;
-	gpio->chip.direction_input	= pcf857x_input;
-	gpio->chip.direction_output	= pcf857x_output;
 	gpio->chip.ngpio		= id->driver_data;
 
 	/* enable gpio_to_irq() if platform has settings */
@@ -334,9 +373,26 @@ static int pcf857x_probe(struct i2c_client *client,
 	 *
 	 * NOTE: we don't distinguish here between *4 and *4a parts.
 	 */
-	if (gpio->chip.ngpio == 8) {
+	if (id->name[0] == 't') // tca9554
+	{
+		gpio->write	= i2c_write_le8tca;
+		gpio->read	= i2c_read_le8tca;
+		gpio->chip.direction_input	= pcf857x_input_tca;
+		gpio->chip.direction_output	= pcf857x_output_tca;
+
+		if (!i2c_check_functionality(client->adapter,
+				I2C_FUNC_SMBUS_BYTE_DATA))
+			status = -EIO;
+
+		/* fail if there's no chip present */
+		else
+			status = i2c_smbus_read_byte_data(client, 0x00);
+
+	} else if (gpio->chip.ngpio == 8) {
 		gpio->write	= i2c_write_le8;
 		gpio->read	= i2c_read_le8;
+		gpio->chip.direction_input	= pcf857x_input;
+		gpio->chip.direction_output	= pcf857x_output;
 
 		if (!i2c_check_functionality(client->adapter,
 				I2C_FUNC_SMBUS_BYTE))
@@ -355,6 +411,8 @@ static int pcf857x_probe(struct i2c_client *client,
 	} else if (gpio->chip.ngpio == 16) {
 		gpio->write	= i2c_write_le16;
 		gpio->read	= i2c_read_le16;
+		gpio->chip.direction_input	= pcf857x_input;
+		gpio->chip.direction_output	= pcf857x_output;
 
 		if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C))
 			status = -EIO;
@@ -410,6 +468,7 @@ static int pcf857x_probe(struct i2c_client *client,
 	}
 
 	dev_info(&client->dev, "probed\n");
+	dev_info(&client->dev, "GPIO %d registered\n", gpio->chip.base);
 
 	return 0;
 
