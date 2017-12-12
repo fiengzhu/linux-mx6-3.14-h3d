@@ -240,7 +240,7 @@ static irqreturn_t pcf857x_irq(int irq, void *data)
 	struct pcf857x  *gpio = data;
 	unsigned long change, i, status, flags;
 
-	status = gpio->read(gpio->client);
+	//status = gpio->read(gpio->client);
 
 	spin_lock_irqsave(&gpio->slock, flags);
 
@@ -249,10 +249,11 @@ static irqreturn_t pcf857x_irq(int irq, void *data)
 	 * interrupt source, just to avoid bad irqs
 	 */
 
-	change = ((gpio->status ^ status) & gpio->irq_mapped);
+	//change = ((gpio->status ^ status) & gpio->irq_mapped);
+	change = gpio->irq_mapped;
 	for_each_set_bit(i, &change, gpio->chip.ngpio)
 		generic_handle_irq(irq_find_mapping(gpio->irq_domain, i));
-	gpio->status = status;
+	//gpio->status = status;
 
 	spin_unlock_irqrestore(&gpio->slock, flags);
 

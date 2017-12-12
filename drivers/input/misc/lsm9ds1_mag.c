@@ -63,6 +63,7 @@
 #define CTRL_REG4_M			(0x23)
 #define CTRL_REG5_M			(0x24)
 #define INT_CFG_M			(0x30)
+#define INT_SRC_M			(0x31)
 #define INT_THS_L			(0x32)
 #define INT_THS_H			(0x33)
 
@@ -168,6 +169,13 @@ struct lsm9ds1_mag_status {
 
 	u8 xy_mode;
 	u8 z_mode;
+
+	u8 int_cfg;
+	u16 int_thr; 
+
+	int irq;
+	struct work_struct irq_work;
+	struct workqueue_struct *irq_work_queue;
 };
 
 static const struct lsm9ds1_mag_platform_data default_lsm9ds1_mag_pdata = {
@@ -179,6 +187,7 @@ static const struct lsm9ds1_mag_platform_data default_lsm9ds1_mag_pdata = {
 		{0, 1, 0},
 		{0, 0, 1},
 	},
+	.gpio_int_m = LSM9DS1_INT_M_GPIO_DEF,
 };
 
 struct reg_rw {
@@ -407,6 +416,8 @@ static int lsm9ds1_mag_device_power_off(struct lsm9ds1_mag_status *stat)
 
 	atomic_set(&stat->enabled_mag, 0);
 
+	dev_info(&stat->client->dev, "magnetometer power off");
+
 	return 0;
 }
 
@@ -437,13 +448,20 @@ static int lsm9ds1_mag_device_power_on(struct lsm9ds1_mag_status *stat)
 
 	buf[0] = status_registers.int_cfg_m.address;
 	buf[1] = status_registers.int_cfg_m.resume_value;
+	err = lsm9ds1_i2c_write(stat, buf, 1);
+	if (err < 0)
+		goto err_resume_state;
+
+	buf[0] = status_registers.int_ths_l.address;
+	buf[1] = status_registers.int_ths_l.resume_value;
 	buf[2] = status_registers.int_ths_h.resume_value;
-	buf[3] = status_registers.int_ths_l.resume_value;
-	err = lsm9ds1_i2c_write(stat, buf, 5);
+	err = lsm9ds1_i2c_write(stat, buf, 2);
 	if (err < 0)
 		goto err_resume_state;
 
 	atomic_set(&stat->enabled_mag, 1);
+
+	dev_info(&stat->client->dev, "magnetometer power on");
 
 	return 0;
 
@@ -539,6 +557,53 @@ error:
 	return err;
 }
 
+static int lsm9ds1_mag_update_interrupt_threshold(struct lsm9ds1_mag_status *stat,
+							u16 value)
+{
+	int err = -1;
+	u8 config[3];
+
+	config[0] = INT_THS_L;
+	config[1] = (value & 0x00FF);
+	config[2] = ((value & 0x7F00) >> 8);  // 7F00: bit 8 of INT_THS_H needs to be 0
+
+	status_registers.int_ths_l.resume_value = (value & 0x00FF);
+	status_registers.int_ths_h.resume_value = ((value & 0x7F00) >> 8);
+
+	err = lsm9ds1_i2c_write(stat,config,2);
+
+	if (err < 0) {
+		dev_err(&stat->client->dev, "update interrupt threshold failed "
+			"0x%02x,0x%02x,0x%02x: %d\n", config[0], config[1], config[2], err);
+	}
+
+	stat->int_thr = value;
+
+	return err;
+}
+
+static int lsm9ds1_mag_update_interrupt_config(struct lsm9ds1_mag_status *stat,
+							u8 value)
+{
+	int err = -1;
+	u8 config[2];
+
+	config[0] = INT_CFG_M;
+	config[1] = value;
+
+	status_registers.int_cfg_m.resume_value = value;
+
+	err = lsm9ds1_i2c_write(stat,config,1);
+
+	if (err < 0) {
+		dev_err(&stat->client->dev, "update interrupt config failed "
+			"0x%02x,0x%02x: %d\n", config[0], config[1], err);
+	}
+	stat->int_cfg = value;
+
+	return err;
+}
+
 static int lsm9ds1_mag_update_operative_mode(struct lsm9ds1_mag_status *stat,
 							int axis, u8 value)
 {
@@ -603,6 +668,9 @@ static int lsm9ds1_mag_enable(struct lsm9ds1_mag_status *stat)
 		}
 		hrtimer_start(&stat->hr_timer_mag, stat->ktime_mag,
 							HRTIMER_MODE_REL);
+
+		if(stat->pdata_mag->gpio_int_m >= 0)
+			enable_irq(stat->irq);
 	}
 
 	return 0;
@@ -614,8 +682,11 @@ static int lsm9ds1_mag_disable(struct lsm9ds1_mag_status *stat)
 		cancel_work_sync(&stat->input_work_mag);
 		hrtimer_cancel(&stat->hr_timer_mag);
 		lsm9ds1_mag_device_power_off(stat);
-	}
 
+		if(stat->pdata_mag->gpio_int_m >= 0)
+			disable_irq_nosync(stat->irq);
+	}
+	
 	return 0;
 }
 
@@ -702,7 +773,7 @@ static ssize_t attr_get_range_mag(struct device *dev,
 		range = 8;
 		break;
 	case LSM9DS1_MAG_FS_12G:
-		range = 10;
+		range = 12;
 		break;
 	case LSM9DS1_MAG_FS_16G:
 		range = 16;
@@ -731,7 +802,7 @@ static ssize_t attr_set_range_mag(struct device *dev,
 	case 8:
 		range = LSM9DS1_MAG_FS_8G;
 		break;
-	case 10:
+	case 12:
 		range = LSM9DS1_MAG_FS_12G;
 		break;
 	case 16:
@@ -827,6 +898,103 @@ error:
 	dev_err(&stat->client->dev, "magnetometer invalid value "
 					"request: %s, discarded\n", buf);
 	return -EINVAL;
+}
+
+static ssize_t attr_get_intcfg(struct device *dev, 
+				struct device_attribute *attr,
+				char *buf)
+{
+	u8 val;
+	u8 config[2];
+	int err;
+	struct lsm9ds1_mag_status *stat = dev_get_drvdata(dev);
+
+	mutex_lock(&stat->lock);
+	config[0] = INT_CFG_M;
+	err = lsm9ds1_i2c_read(stat,config,1);
+
+	val = config[0]; //stat->int_cfg;
+	mutex_unlock(&stat->lock);
+
+	return sprintf(buf, "0x%x\n", val);
+}
+
+static ssize_t attr_set_intcfg(struct device *dev,
+				struct device_attribute *attr,
+				const char *buf, size_t size)
+{
+	struct lsm9ds1_mag_status *stat = dev_get_drvdata(dev);
+	unsigned long val;
+	int err;
+
+	mutex_lock(&stat->lock);
+	if (kstrtoul(buf, 16, &val))
+		return -EINVAL;
+
+	err = lsm9ds1_mag_update_interrupt_config(stat, (u8)val);
+	if (err != 0)
+	{
+		dev_err(&stat->client->dev, "magnetometer invalid interrupt config "
+					"request: %s, discarded\n", buf);
+		return -EINVAL;
+	}
+	
+
+	dev_info(&stat->client->dev, "magnetometer interrupt config set to:"
+							" %s", buf);
+	mutex_unlock(&stat->lock);
+	return size;
+}
+
+static ssize_t attr_get_intthr(struct device *dev, 
+				struct device_attribute *attr,
+				char *buf)
+{
+	u16 val;
+	s32 threshold;
+	u8 config[2];
+	int err;
+	struct lsm9ds1_mag_status *stat = dev_get_drvdata(dev);
+
+
+	mutex_lock(&stat->lock);
+	config[0] = INT_THS_L;
+	err = lsm9ds1_i2c_read(stat,config,2);
+
+	val = (u16)(config[0] | (config[1] << 8));//stat->int_thr;
+	threshold = (s32)(val * stat->sensitivity_mag);
+	mutex_unlock(&stat->lock);
+
+	return sprintf(buf, "%d\n", threshold);
+}
+
+static ssize_t attr_set_intthr(struct device *dev,
+				struct device_attribute *attr,
+				const char *buf, size_t size)
+{
+	struct lsm9ds1_mag_status *stat = dev_get_drvdata(dev);
+	unsigned long threshold;
+	u16 val;
+	int err;
+
+	mutex_lock(&stat->lock);
+	if (kstrtoul(buf, 10, &threshold))
+		return -EINVAL;
+
+	val = (u16)(abs(threshold) / stat->sensitivity_mag);
+	err = lsm9ds1_mag_update_interrupt_threshold(stat, (u16)val);
+	if (err != 0)
+	{
+		dev_err(&stat->client->dev, "magnetometer invalid interrupt config "
+					"request: %s, discarded\n", buf);
+		return -EINVAL;
+	}
+	
+
+	dev_info(&stat->client->dev, "magnetometer interrupt config set to:"
+							" %s", buf);
+	mutex_unlock(&stat->lock);
+	return size;
 }
 
 static ssize_t attr_get_z_mode(struct device *dev, 
@@ -947,7 +1115,8 @@ static struct device_attribute attributes[] = {
 	__ATTR(enable_device, 0664, attr_get_enable_mag, attr_set_enable_mag),
 	__ATTR(x_y_opearative_mode, 0664, attr_get_xy_mode, attr_set_xy_mode),
 	__ATTR(z_opearative_mode, 0664, attr_get_z_mode, attr_set_z_mode),
-
+	__ATTR(int_config, 0664, attr_get_intcfg, attr_set_intcfg),
+	__ATTR(int_threshold, 0664, attr_get_intthr, attr_set_intthr),
 };
 
 static int create_sysfs_interfaces(struct device *dev)
@@ -993,7 +1162,9 @@ static int lsm9ds1_mag_get_data(struct lsm9ds1_mag_status *stat, int *xyz)
 	int i, err = -1;
 	u8 mag_data[6];
 	s32 hw_d[3] = { 0 };
+	u8 int_data[4];
 
+	// xyz magnitude
 	mag_data[0] = (REG_MAG_DATA_ADDR);
 	err = lsm9ds1_i2c_read(stat, mag_data, 6);
 	if (err < 0)
@@ -1016,11 +1187,19 @@ static int lsm9ds1_mag_get_data(struct lsm9ds1_mag_status *stat, int *xyz)
 	hw_d[1] = hw_d[1] * stat->sensitivity_mag;
 	hw_d[2] = hw_d[2] * stat->sensitivity_mag;
 
+	// interrupt status
+	int_data[0] = (INT_SRC_M);
+	err = lsm9ds1_i2c_read(stat, int_data, 1);
+	if (err < 0)
+		return err;	
+
+
 	for (i = 0; i < 3; i++) {
 		xyz[i] = stat->pdata_mag->rot_matrix[0][i] * hw_d[0] +
 				stat->pdata_mag->rot_matrix[1][i] * hw_d[1] +
 				stat->pdata_mag->rot_matrix[2][i] * hw_d[2];
 	}
+	xyz[3] = (s32)((int_data[0]));
 
 	return err;
 }
@@ -1031,6 +1210,8 @@ static void lsm9ds1_mag_report_values(struct lsm9ds1_mag_status *stat,
 	input_report_abs(stat->input_dev_mag, ABS_X, xyz[0]);
 	input_report_abs(stat->input_dev_mag, ABS_Y, xyz[1]);
 	input_report_abs(stat->input_dev_mag, ABS_Z, xyz[2]);
+	input_report_abs(stat->input_dev_mag, ABS_MISC, (xyz[3]&0xFF) + ((xyz[2]&0xFF)<<8)); 
+	// make sure misc changes and thus output event
 	input_sync(stat->input_dev_mag);
 }
 
@@ -1054,7 +1235,11 @@ static int lsm9ds1_mag_input_init(struct lsm9ds1_mag_status *stat)
 
 	input_set_drvdata(stat->input_dev_mag, stat);
 
+	//stat->input_dev_mag->evbit[0] = BIT_MASK(EV_ABS);
+	//stat->input_dev_mag->absbit[BIT_WORD(ABS_MISC)] = BIT_MASK(ABS_MISC);
+
 	set_bit(EV_ABS, stat->input_dev_mag->evbit);
+	input_set_capability(stat->input_dev_mag, EV_ABS, ABS_MISC);  
 
 	input_set_abs_params(stat->input_dev_mag, ABS_X, MAG_MAX_NEG,
 						MAG_MAX_POS, FUZZ, FLAT);
@@ -1062,6 +1247,8 @@ static int lsm9ds1_mag_input_init(struct lsm9ds1_mag_status *stat)
 						MAG_MAX_POS, FUZZ, FLAT);
 	input_set_abs_params(stat->input_dev_mag, ABS_Z, MAG_MAX_NEG,
 						MAG_MAX_POS, FUZZ, FLAT);
+	input_set_abs_params(stat->input_dev_mag, ABS_MISC, 0,
+						0xFFFFFFFF, FUZZ, FLAT);
 
 	err = input_register_device(stat->input_dev_mag);
 	if (err) {
@@ -1088,7 +1275,7 @@ static void lsm9ds1_input_cleanup(struct lsm9ds1_mag_status *stat)
 static void poll_function_work_mag(struct work_struct *input_work_mag)
 {
 	struct lsm9ds1_mag_status *stat;
-	int xyz[3] = { 0 };
+	int xyz[4] = { 0 };
 	int err;
 
 	stat = container_of((struct work_struct *)input_work_mag,
@@ -1160,6 +1347,13 @@ static int lsm9ds1_mag_parse_dt(struct lsm9ds1_mag_status *stat,
 				}
 			}
 		}
+
+		for (j = 0; j < 3; j++){
+			dev_info(dev, "rot matrix %d: "
+					"%d, %d, %d\n", j, stat->pdata_mag->rot_matrix[0][j],
+					stat->pdata_mag->rot_matrix[1][j],stat->pdata_mag->rot_matrix[2][j]);
+		}
+		
 
 		if (!of_property_read_u32(dn, "poll-interval", &val)) {
 			stat->pdata_mag->poll_interval = val;
@@ -1269,6 +1463,37 @@ static int lsm9ds1_mag_probe(struct i2c_client *client,
 		}
 	}
 
+
+	if(stat->pdata_mag->gpio_int_m >= 0) {
+		if (!gpio_is_valid(stat->pdata_mag->gpio_int_m)) {
+  			dev_err(&client->dev, "The requested GPIO [%d] is not "
+				"available\n", stat->pdata_mag->gpio_int_m);
+			err = -EINVAL;
+  			goto err_gpio_valid;
+		}
+
+		err = gpio_request(stat->pdata_mag->gpio_int_m,
+						"INTERRUPT_PINm_LSM9DS1");
+		if(err < 0) {
+			dev_err(&client->dev, "Unable to request GPIO [%d].\n",
+						stat->pdata_mag->gpio_int_m);
+  			err = -EINVAL;
+			goto err_gpio_valid;
+		}
+		gpio_direction_input(stat->pdata_mag->gpio_int_m);
+		gpio_export(stat->pdata_mag->gpio_int_m, false);
+		stat->irq = gpio_to_irq(stat->pdata_mag->gpio_int_m);
+		if(stat->irq < 0) {
+			dev_err(&client->dev, "GPIO [%d] cannot be used as "
+				"interrupt.\n",	stat->pdata_mag->gpio_int_m);
+			err = -EINVAL;
+			goto err_gpio_irq;
+		}
+		pr_info("%s: %s has set irq1 to irq: %d, mapped on gpio:%d\n",
+			LSM9DS1_MAG_DEV_NAME, __func__, stat->irq,
+						stat->pdata_mag->gpio_int_m);
+	}
+
 	err = lsm9ds1_hw_init(stat);
 	if (err < 0) {
 		dev_err(&client->dev, "hw init failed: %d\n", err);
@@ -1322,6 +1547,9 @@ err_power_off:
 err_power_off_mag:
 	lsm9ds1_mag_device_power_off(stat);
 err_hw_init:
+err_gpio_irq:
+	gpio_free(stat->pdata_mag->gpio_int_m);
+err_gpio_valid:
 err_pdata_init:
 err_pdata_mag_init:
 	if (stat->pdata_mag->exit)
@@ -1351,6 +1579,12 @@ static int lsm9ds1_mag_remove(struct i2c_client *client)
 
 	if (stat->pdata_mag->exit)
 		stat->pdata_mag->exit();
+
+	if(stat->pdata_mag->gpio_int_m >= 0) {
+		free_irq(stat->irq, stat);
+		gpio_free(stat->pdata_mag->gpio_int_m);
+		destroy_workqueue(stat->irq_work_queue);
+	}
 
 	if(!lsm9ds1_mag_workqueue) {
 		flush_workqueue(lsm9ds1_mag_workqueue);

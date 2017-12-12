@@ -54,18 +54,19 @@
 #define REFERENCE_G			(0x0B)
 
 /* Sensitivity */
-#define SENSITIVITY_ACC_2G		(60)	/** ug/LSB */
-#define SENSITIVITY_ACC_4G		(120)	/** ug/LSB */
-#define SENSITIVITY_ACC_8G		(240)	/** ug/LSB */
-#define SENSITIVITY_GYR_250		(8750)	/** udps/LSB */
-#define SENSITIVITY_GYR_500		(17500)	/** udps/LSB */
-#define SENSITIVITY_GYR_2000		(70000)	/** udps/LSB */
+#define SENSITIVITY_ACC_2G		(61)	/** ug/LSB */
+#define SENSITIVITY_ACC_4G		(122)	/** ug/LSB */
+#define SENSITIVITY_ACC_8G		(244)	/** ug/LSB */
+#define SENSITIVITY_ACC_16G		(732)	/** ug/LSB */
+#define SENSITIVITY_GYR_250		(875)	/** 10udps/LSB */
+#define SENSITIVITY_GYR_500		(1750)	/** 10udps/LSB */
+#define SENSITIVITY_GYR_2000	(7000)	/** 10udps/LSB */
 
 #define MAX_I2C_VAL			(0x7FFF)
 
 /** Accelerometer range in ug */
-#define ACC_MAX_POS			(MAX_I2C_VAL * SENSITIVITY_ACC_8G)
-#define ACC_MAX_NEG			(-MAX_I2C_VAL * SENSITIVITY_ACC_8G)
+#define ACC_MAX_POS			(MAX_I2C_VAL * SENSITIVITY_ACC_16G)
+#define ACC_MAX_NEG			(-MAX_I2C_VAL * SENSITIVITY_ACC_16G)
 
 /** Gyroscope range in udps */
 #define GYR_MAX_POS			(MAX_I2C_VAL * SENSITIVITY_GYR_2000)
@@ -348,8 +349,8 @@ struct lsm9ds1_acc_gyr_status {
 	int8_t hw_working;
 
 	atomic_t enabled_acc;
-        atomic_t enabled_gyr;
-        atomic_t enabled_temp;
+    atomic_t enabled_gyr;
+    atomic_t enabled_temp;
 
 	int32_t temp_value_dec;
 	uint32_t temp_value_flo;
@@ -371,13 +372,13 @@ struct lsm9ds1_acc_gyr_status {
 
 struct reg_rw {
 	u8 address;
-	u8 default_val;
-	u8 resume_val;
+	u8 default_value;
+	u8 resume_value;
 };
 
 struct reg_r {
 	u8 address;
-	u8 default_val;
+	u8 default_value;
 };
 
 static struct status_registers {
@@ -419,77 +420,77 @@ static struct status_registers {
 	struct reg_rw int_gen_dur_g;
 } status_registers = {
 	.act_ths =
-		{.address = ACT_THS, 		.default_val = DEF_ZERO,},
+		{.address = ACT_THS, 		.default_value = DEF_ZERO,},
 	.act_dur =
-		{.address = ACT_DUR, 		.default_val = DEF_ZERO,},
+		{.address = ACT_DUR, 		.default_value = DEF_ZERO,},
 	.int_gen_cfg_xl =
-		{.address = INT_GEN_CFG_XL, 	.default_val = DEF_ZERO,},
+		{.address = INT_GEN_CFG_XL, 	.default_value = DEF_ZERO,},
 	.int_gen_ths_x_xl =
-		{.address = INT_GEN_THS_X_XL, 	.default_val = DEF_ZERO,},
+		{.address = INT_GEN_THS_X_XL, 	.default_value = DEF_ZERO,},
 	.int_gen_ths_y_xl =
-		{.address = INT_GEN_THS_Y_XL, 	.default_val = DEF_ZERO,},
+		{.address = INT_GEN_THS_Y_XL, 	.default_value = DEF_ZERO,},
 	.int_gen_ths_z_xl =
-		{.address = INT_GEN_THS_Z_XL, 	.default_val = DEF_ZERO,},
+		{.address = INT_GEN_THS_Z_XL, 	.default_value = DEF_ZERO,},
 	.int_gen_dur_xl = 
-		{.address = INT_GEN_DUR_XL, 	.default_val = DEF_ZERO,},
+		{.address = INT_GEN_DUR_XL, 	.default_value = DEF_ZERO,},
 	.reference_g =
-		{.address = REFERENCE_G, 	.default_val = DEF_ZERO,},
+		{.address = REFERENCE_G, 	.default_value = DEF_ZERO,},
 	.int1_ctrl =
-		{.address = INT1_CTRL,		.default_val = DEF_ZERO,},
+		{.address = INT1_CTRL,		.default_value = DEF_ZERO,},
 	.int2_ctrl =
-		{.address = INT2_CTRL,		.default_val = DEF_ZERO,},
+		{.address = INT2_CTRL,		.default_value = DEF_ZERO,},
 	.who_am_i =
-		{.address = WHO_AM_I,		.default_val = WHO_AM_I_VAL,},
+		{.address = WHO_AM_I,		.default_value = WHO_AM_I_VAL,},
 	.ctrl_reg1_g =
-		{.address = CTRL_REG1_G,	.default_val = DEF_ZERO,},
+		{.address = CTRL_REG1_G,	.default_value = DEF_ZERO,},
 	.ctrl_reg2_g =
-		{.address = CTRL_REG2_G,	.default_val = DEF_ZERO,},
+		{.address = CTRL_REG2_G,	.default_value = DEF_ZERO,},
 	.ctrl_reg3_g =
-		{.address = CTRL_REG3_G,	.default_val = DEF_ZERO,},
+		{.address = CTRL_REG3_G,	.default_value = DEF_ZERO,},
 	.orient_cfg_g =
-		{.address = ORIENT_CFG_G,	.default_val = DEF_ZERO,},
+		{.address = ORIENT_CFG_G,	.default_value = DEF_ZERO,},
 	.int_gen_src_g =
-		{.address = INT_GEN_SRC_G,	.default_val = UNDEF,},
+		{.address = INT_GEN_SRC_G,	.default_value = UNDEF,},
 	.status_reg1 =
-		{.address = STATUS_REG1,	.default_val = UNDEF,},
+		{.address = STATUS_REG1,	.default_value = UNDEF,},
 	.ctrl_reg4 =
-		{.address = CTRL_REG4,		.default_val = CTRL_REG4_DEF,},
+		{.address = CTRL_REG4,		.default_value = CTRL_REG4_DEF,},
 	.ctrl_reg5_xl =
-		{.address = CTRL_REG5_XL,	.default_val = CTRL_REG5_XL_DEF,},
+		{.address = CTRL_REG5_XL,	.default_value = CTRL_REG5_XL_DEF,},
 	.ctrl_reg6_xl =
-		{.address = CTRL_REG6_XL,	.default_val = DEF_ZERO,},
+		{.address = CTRL_REG6_XL,	.default_value = DEF_ZERO,},
 	.ctrl_reg7_xl =
-		{.address = CTRL_REG7_XL,	.default_val = DEF_ZERO,},
+		{.address = CTRL_REG7_XL,	.default_value = DEF_ZERO,},
 	.ctrl_reg8 =
-		{.address = CTRL_REG8,		.default_val = CTRL_REG8_DEF,},
+		{.address = CTRL_REG8,		.default_value = CTRL_REG8_DEF,},
 	.ctrl_reg9 =
-		{.address = CTRL_REG9,		.default_val = DEF_ZERO,},
+		{.address = CTRL_REG9,		.default_value = DEF_ZERO,},
 	.ctrl_reg10 =
-		{.address = CTRL_REG10,	.default_val = DEF_ZERO,},
+		{.address = CTRL_REG10,	.default_value = DEF_ZERO,},
 	.int_gen_src_xl =
-		{.address = INT_GEN_SRC_XL,	.default_val = DEF_ZERO,},
+		{.address = INT_GEN_SRC_XL,	.default_value = DEF_ZERO,},
 	.status_reg2 =
-		{.address = STATUS_REG2,	.default_val = UNDEF,},
+		{.address = STATUS_REG2,	.default_value = UNDEF,},
 	.fifo_ctrl =
-		{.address = FIFO_CTRL,		.default_val = DEF_ZERO,},
+		{.address = FIFO_CTRL,		.default_value = DEF_ZERO,},
 	.fifo_src =
-		{.address = FIFO_SRC,		.default_val = UNDEF,},
+		{.address = FIFO_SRC,		.default_value = UNDEF,},
 	.int_gen_cfg_g =
-		{.address = INT_GEN_CFG_G,	.default_val = DEF_ZERO,},
+		{.address = INT_GEN_CFG_G,	.default_value = DEF_ZERO,},
 	.int_gen_ths_xh_g =
-		{.address = INT_GEN_THS_XH_G,	.default_val = DEF_ZERO,},
+		{.address = INT_GEN_THS_XH_G,	.default_value = DEF_ZERO,},
 	.int_gen_ths_xl_g =
-		{.address = INT_GEN_THS_XL_G,	.default_val = DEF_ZERO,},
+		{.address = INT_GEN_THS_XL_G,	.default_value = DEF_ZERO,},
 	.int_gen_ths_yh_g =
-		{.address = INT_GEN_THS_YH_G,	.default_val = DEF_ZERO,},
+		{.address = INT_GEN_THS_YH_G,	.default_value = DEF_ZERO,},
 	.int_gen_ths_yl_g =
-		{.address = INT_GEN_THS_YL_G,	.default_val = DEF_ZERO,},
+		{.address = INT_GEN_THS_YL_G,	.default_value = DEF_ZERO,},
 	.int_gen_ths_zh_g =
-		{.address = INT_GEN_THS_ZH_G,	.default_val = DEF_ZERO,},
+		{.address = INT_GEN_THS_ZH_G,	.default_value = DEF_ZERO,},
 	.int_gen_ths_zl_g =
-		{.address = INT_GEN_THS_ZL_G,	.default_val = DEF_ZERO,},
+		{.address = INT_GEN_THS_ZL_G,	.default_value = DEF_ZERO,},
 	.int_gen_dur_g =
-		{.address = INT_GEN_DUR_G,	.default_val = DEF_ZERO,},
+		{.address = INT_GEN_DUR_G,	.default_value = DEF_ZERO,},
 };
 /*****************************************************************************/
 
@@ -621,7 +622,7 @@ static int lsm9ds1_acc_device_power_off(struct lsm9ds1_acc_gyr_status *stat)
 
 	buf[0] = status_registers.ctrl_reg6_xl.address;
 	buf[1] = (LSM9DS1_ACC_ODR_MASK & LSM9DS1_ACC_ODR_OFF) |
-	((~LSM9DS1_ACC_ODR_MASK) & status_registers.ctrl_reg6_xl.resume_val);
+	((~LSM9DS1_ACC_ODR_MASK) & status_registers.ctrl_reg6_xl.resume_value);
 
 	err = lsm9ds1_i2c_write(stat, buf, 1);
 
@@ -646,7 +647,7 @@ static int lsm9ds1_gyr_device_power_off(struct lsm9ds1_acc_gyr_status *stat)
 
 	buf[0] = status_registers.ctrl_reg1_g.address;
 	buf[1] = (LSM9DS1_GYR_ODR_MASK & LSM9DS1_GYR_ODR_OFF) |
-	((~LSM9DS1_GYR_ODR_MASK) & status_registers.ctrl_reg1_g.resume_val);
+	((~LSM9DS1_GYR_ODR_MASK) & status_registers.ctrl_reg1_g.resume_value);
 
 	err = lsm9ds1_i2c_write(stat, buf, 1);
 	
@@ -802,75 +803,75 @@ static int lsm9ds1_acc_gyr_hw_init(struct lsm9ds1_acc_gyr_status *stat)
 	} else
 		stat->hw_working = 1;
 
-	if (buf[0] != status_registers.who_am_i.default_val) {
+	if (buf[0] != status_registers.who_am_i.default_value) {
 	dev_err(&stat->client->dev,
 		"device unknown. Expected: 0x%02x,"
-		" Replies: 0x%02x\n", status_registers.who_am_i.default_val, 
+		" Replies: 0x%02x\n", status_registers.who_am_i.default_value, 
 					buf[0]);
 		err = -1;
 		goto err_unknown_device;
 	}
 
-	status_registers.act_ths.resume_val =
-				status_registers.act_ths.default_val;
-	status_registers.act_dur.resume_val =
-				status_registers.act_dur.default_val;
-	status_registers.int_gen_cfg_xl.resume_val =
-				status_registers.int_gen_cfg_xl.default_val;
-	status_registers.int_gen_ths_x_xl.resume_val =
-				status_registers.int_gen_ths_x_xl.default_val;
-	status_registers.int_gen_ths_y_xl.resume_val =
-				status_registers.int_gen_ths_y_xl.default_val;
-	status_registers.int_gen_ths_z_xl.resume_val =
-				status_registers.int_gen_ths_z_xl.default_val;
-	status_registers.int_gen_dur_xl.resume_val =
-				status_registers.int_gen_dur_xl.default_val;
-	status_registers.reference_g.resume_val =
-				status_registers.reference_g.default_val;
-	status_registers.int1_ctrl.resume_val =
-				status_registers.int1_ctrl.default_val;
-	status_registers.int2_ctrl.resume_val =
-				status_registers.int2_ctrl.default_val;
-	status_registers.ctrl_reg1_g.resume_val =
-				status_registers.ctrl_reg1_g.default_val;
-	status_registers.ctrl_reg2_g.resume_val =
-				status_registers.ctrl_reg2_g.default_val;
-	status_registers.ctrl_reg3_g.resume_val =
-				status_registers.ctrl_reg3_g.default_val;
-	status_registers.orient_cfg_g.resume_val =
-				status_registers.orient_cfg_g.default_val;
-	status_registers.ctrl_reg4.resume_val =
-				status_registers.ctrl_reg4.default_val;
-	status_registers.ctrl_reg5_xl.resume_val =
-				status_registers.ctrl_reg5_xl.default_val;
-	status_registers.ctrl_reg6_xl.resume_val =
-				status_registers.ctrl_reg6_xl.default_val;
-	status_registers.ctrl_reg7_xl.resume_val =
-				status_registers.ctrl_reg7_xl.default_val;
-	status_registers.ctrl_reg8.resume_val =
-				status_registers.ctrl_reg8.default_val;
-	status_registers.ctrl_reg9.resume_val =
-				status_registers.ctrl_reg9.default_val;
-	status_registers.ctrl_reg10.resume_val =
-				status_registers.ctrl_reg10.default_val;
-	status_registers.fifo_ctrl.resume_val =
-				status_registers.fifo_ctrl.default_val;
-	status_registers.int_gen_cfg_g.resume_val =
-				status_registers.int_gen_cfg_g.default_val;
-	status_registers.int_gen_ths_xh_g.resume_val =
-				status_registers.int_gen_ths_xh_g.default_val;
-	status_registers.int_gen_ths_xl_g.resume_val =
-				status_registers.int_gen_ths_xl_g.default_val;
-	status_registers.int_gen_ths_yh_g.resume_val =
-				status_registers.int_gen_ths_yh_g.default_val;
-	status_registers.int_gen_ths_yl_g.resume_val =
-				status_registers.int_gen_ths_yl_g.default_val;
-	status_registers.int_gen_ths_zh_g.resume_val =
-				status_registers.int_gen_ths_zh_g.default_val;
-	status_registers.int_gen_ths_zl_g.resume_val =
-				status_registers.int_gen_ths_zl_g.default_val;
-	status_registers.int_gen_dur_g.resume_val =
-				status_registers.int_gen_dur_g.default_val;
+	status_registers.act_ths.resume_value =
+				status_registers.act_ths.default_value;
+	status_registers.act_dur.resume_value =
+				status_registers.act_dur.default_value;
+	status_registers.int_gen_cfg_xl.resume_value =
+				status_registers.int_gen_cfg_xl.default_value;
+	status_registers.int_gen_ths_x_xl.resume_value =
+				status_registers.int_gen_ths_x_xl.default_value;
+	status_registers.int_gen_ths_y_xl.resume_value =
+				status_registers.int_gen_ths_y_xl.default_value;
+	status_registers.int_gen_ths_z_xl.resume_value =
+				status_registers.int_gen_ths_z_xl.default_value;
+	status_registers.int_gen_dur_xl.resume_value =
+				status_registers.int_gen_dur_xl.default_value;
+	status_registers.reference_g.resume_value =
+				status_registers.reference_g.default_value;
+	status_registers.int1_ctrl.resume_value =
+				status_registers.int1_ctrl.default_value;
+	status_registers.int2_ctrl.resume_value =
+				status_registers.int2_ctrl.default_value;
+	status_registers.ctrl_reg1_g.resume_value =
+				status_registers.ctrl_reg1_g.default_value;
+	status_registers.ctrl_reg2_g.resume_value =
+				status_registers.ctrl_reg2_g.default_value;
+	status_registers.ctrl_reg3_g.resume_value =
+				status_registers.ctrl_reg3_g.default_value;
+	status_registers.orient_cfg_g.resume_value =
+				status_registers.orient_cfg_g.default_value;
+	status_registers.ctrl_reg4.resume_value =
+				status_registers.ctrl_reg4.default_value;
+	status_registers.ctrl_reg5_xl.resume_value =
+				status_registers.ctrl_reg5_xl.default_value;
+	status_registers.ctrl_reg6_xl.resume_value =
+				status_registers.ctrl_reg6_xl.default_value;
+	status_registers.ctrl_reg7_xl.resume_value =
+				status_registers.ctrl_reg7_xl.default_value;
+	status_registers.ctrl_reg8.resume_value =
+				status_registers.ctrl_reg8.default_value;
+	status_registers.ctrl_reg9.resume_value =
+				status_registers.ctrl_reg9.default_value;
+	status_registers.ctrl_reg10.resume_value =
+				status_registers.ctrl_reg10.default_value;
+	status_registers.fifo_ctrl.resume_value =
+				status_registers.fifo_ctrl.default_value;
+	status_registers.int_gen_cfg_g.resume_value =
+				status_registers.int_gen_cfg_g.default_value;
+	status_registers.int_gen_ths_xh_g.resume_value =
+				status_registers.int_gen_ths_xh_g.default_value;
+	status_registers.int_gen_ths_xl_g.resume_value =
+				status_registers.int_gen_ths_xl_g.default_value;
+	status_registers.int_gen_ths_yh_g.resume_value =
+				status_registers.int_gen_ths_yh_g.default_value;
+	status_registers.int_gen_ths_yl_g.resume_value =
+				status_registers.int_gen_ths_yl_g.default_value;
+	status_registers.int_gen_ths_zh_g.resume_value =
+				status_registers.int_gen_ths_zh_g.default_value;
+	status_registers.int_gen_ths_zl_g.resume_value =
+				status_registers.int_gen_ths_zl_g.default_value;
+	status_registers.int_gen_dur_g.resume_value =
+				status_registers.int_gen_dur_g.default_value;
 
 	stat->temp_value_dec = NDTEMP;
 
@@ -901,48 +902,49 @@ static int lsm9ds1_acc_device_power_on(struct lsm9ds1_acc_gyr_status *stat)
 	}
 
 	buf[0] = status_registers.ctrl_reg4.address;
- 	buf[1] = status_registers.ctrl_reg4.resume_val;
- 	buf[2] = status_registers.ctrl_reg5_xl.resume_val;
-	buf[3] = status_registers.ctrl_reg6_xl.resume_val;
-	buf[4] = status_registers.ctrl_reg7_xl.resume_val;
-	buf[5] = status_registers.ctrl_reg8.resume_val;
-	buf[6] = status_registers.ctrl_reg9.resume_val;
-	buf[7] = status_registers.ctrl_reg10.resume_val;
+ 	buf[1] = status_registers.ctrl_reg4.resume_value;
+ 	buf[2] = status_registers.ctrl_reg5_xl.resume_value;
+	buf[3] = status_registers.ctrl_reg6_xl.resume_value;
+	buf[4] = status_registers.ctrl_reg7_xl.resume_value;
+	buf[5] = status_registers.ctrl_reg8.resume_value;
+	buf[6] = status_registers.ctrl_reg9.resume_value;
+	buf[7] = status_registers.ctrl_reg10.resume_value;
 	err = lsm9ds1_i2c_write(stat, buf, 7);
 	if (err < 0)
 		goto err_resume_state;
 	
 	buf[0] = status_registers.int_gen_cfg_xl.address;
-	buf[1] = status_registers.int_gen_cfg_xl.resume_val;
-	buf[2] = status_registers.int_gen_ths_x_xl.resume_val;
-	buf[3] = status_registers.int_gen_ths_y_xl.resume_val;
-	buf[4] = status_registers.int_gen_ths_z_xl.resume_val;
-	buf[5] = status_registers.int_gen_dur_xl.resume_val;
+	buf[1] = status_registers.int_gen_cfg_xl.resume_value;
+	buf[2] = status_registers.int_gen_ths_x_xl.resume_value;
+	buf[3] = status_registers.int_gen_ths_y_xl.resume_value;
+	buf[4] = status_registers.int_gen_ths_z_xl.resume_value;
+	buf[5] = status_registers.int_gen_dur_xl.resume_value;
 	err = lsm9ds1_i2c_write(stat, buf, 5);
 	if (err < 0)
 		goto err_resume_state;
 	
 	buf[0] = status_registers.int1_ctrl.address;
-	buf[1] = status_registers.int1_ctrl.resume_val;
-	buf[2] = status_registers.int2_ctrl.resume_val;
+	buf[1] = status_registers.int1_ctrl.resume_value;
+	buf[2] = status_registers.int2_ctrl.resume_value;
 	err = lsm9ds1_i2c_write(stat, buf, 2);
 	if (err < 0)
 		goto err_resume_state;
 	
 	buf[0] = status_registers.fifo_ctrl.address;
-	buf[1] = status_registers.fifo_ctrl.resume_val;
+	buf[1] = status_registers.fifo_ctrl.resume_value;
 	err = lsm9ds1_i2c_write(stat, buf, 1);
 	if (err < 0)
 		goto err_resume_state;
 	
 	buf[0] = status_registers.ctrl_reg8.address;
-	buf[1] = status_registers.ctrl_reg8.resume_val;
-	buf[2] = status_registers.ctrl_reg9.resume_val;
+	buf[1] = status_registers.ctrl_reg8.resume_value;
+	buf[2] = status_registers.ctrl_reg9.resume_value;
 	err = lsm9ds1_i2c_write(stat, buf, 2);
 	if (err < 0)
 		goto err_resume_state;
 
 	atomic_set(&stat->enabled_acc, 1);
+	dev_info(&stat->client->dev, "accelerometer switched on.");
 
 	return 0;
 
@@ -969,59 +971,60 @@ static int lsm9ds1_gyr_device_power_on(struct lsm9ds1_acc_gyr_status *stat)
 	}
 
 	buf[0] = status_registers.act_ths.address;
-	buf[1] = status_registers.act_ths.resume_val;
+	buf[1] = status_registers.act_ths.resume_value;
 	err = lsm9ds1_i2c_write(stat, buf, 1);
 	if (err < 0)
 		goto err_resume_state;
 	
 	buf[0] = status_registers.reference_g.address;
-	buf[1] = status_registers.reference_g.resume_val;
+	buf[1] = status_registers.reference_g.resume_value;
 	err = lsm9ds1_i2c_write(stat, buf, 1);
 	if (err < 0)
 		goto err_resume_state;
 
 	buf[0] = status_registers.ctrl_reg1_g.address;
-	buf[1] = status_registers.ctrl_reg1_g.resume_val;
-	buf[2] = status_registers.ctrl_reg2_g.resume_val;
-	buf[3] = status_registers.ctrl_reg3_g.resume_val;
-	buf[4] = status_registers.orient_cfg_g.resume_val;
+	buf[1] = status_registers.ctrl_reg1_g.resume_value;
+	buf[2] = status_registers.ctrl_reg2_g.resume_value;
+	buf[3] = status_registers.ctrl_reg3_g.resume_value;
+	buf[4] = status_registers.orient_cfg_g.resume_value;
 	err = lsm9ds1_i2c_write(stat, buf, 4);
 	if (err < 0)
 		goto err_resume_state;
 
 	buf[0] = status_registers.ctrl_reg4.address;
-	buf[1] = status_registers.ctrl_reg4.resume_val;
+	buf[1] = status_registers.ctrl_reg4.resume_value;
 	err = lsm9ds1_i2c_write(stat, buf, 1);
 	if (err < 0)
 		goto err_resume_state;
 
 	buf[0] = status_registers.int_gen_cfg_g.address;
-	buf[1] = status_registers.int_gen_cfg_g.resume_val;
-	buf[2] = status_registers.int_gen_ths_xh_g.resume_val;
-	buf[3] = status_registers.int_gen_ths_xl_g.resume_val;
-	buf[4] = status_registers.int_gen_ths_yh_g.resume_val;
-	buf[5] = status_registers.int_gen_ths_yl_g.resume_val;
-	buf[6] = status_registers.int_gen_ths_zh_g.resume_val;
-	buf[7] = status_registers.int_gen_ths_zl_g.resume_val;
-	buf[8] = status_registers.int_gen_dur_g.resume_val;
+	buf[1] = status_registers.int_gen_cfg_g.resume_value;
+	buf[2] = status_registers.int_gen_ths_xh_g.resume_value;
+	buf[3] = status_registers.int_gen_ths_xl_g.resume_value;
+	buf[4] = status_registers.int_gen_ths_yh_g.resume_value;
+	buf[5] = status_registers.int_gen_ths_yl_g.resume_value;
+	buf[6] = status_registers.int_gen_ths_zh_g.resume_value;
+	buf[7] = status_registers.int_gen_ths_zl_g.resume_value;
+	buf[8] = status_registers.int_gen_dur_g.resume_value;
 	err = lsm9ds1_i2c_write(stat, buf, 8);
 	if (err < 0)
 		goto err_resume_state;
 
 	buf[0] = status_registers.int1_ctrl.address;
-	buf[1] = status_registers.int1_ctrl.resume_val;
-	buf[2] = status_registers.int2_ctrl.resume_val;
+	buf[1] = status_registers.int1_ctrl.resume_value;
+	buf[2] = status_registers.int2_ctrl.resume_value;
 	err = lsm9ds1_i2c_write(stat, buf, 2);
 	if (err < 0)
 		goto err_resume_state;
 
 	buf[0] = status_registers.fifo_ctrl.address;
-	buf[1] = status_registers.fifo_ctrl.resume_val;
+	buf[1] = status_registers.fifo_ctrl.resume_value;
 	err = lsm9ds1_i2c_write(stat, buf, 1);
 	if (err < 0)
 		goto err_resume_state;
 
 	atomic_set(&stat->enabled_gyr, 1);
+	dev_info(&stat->client->dev, "gyroscope switched on.");
 
 	return 0;
 
@@ -1051,6 +1054,9 @@ static int lsm9ds1_acc_update_fs_range(struct lsm9ds1_acc_gyr_status *stat,
 	case LSM9DS1_ACC_FS_8G:
 		sensitivity = SENSITIVITY_ACC_8G;
 		break;
+	case LSM9DS1_ACC_FS_16G:
+		sensitivity = SENSITIVITY_ACC_16G;
+		break;
 	default:
 		dev_err(&stat->client->dev, "invalid accelerometer "
 				"fs range requested: %u\n", new_fs_range);
@@ -1058,7 +1064,7 @@ static int lsm9ds1_acc_update_fs_range(struct lsm9ds1_acc_gyr_status *stat,
 	}
 
 	val = ((LSM9DS1_ACC_FS_MASK & new_fs_range) | ((~LSM9DS1_ACC_FS_MASK) & 
-				status_registers.ctrl_reg6_xl.resume_val));
+				status_registers.ctrl_reg6_xl.resume_value));
 
 	buf[0] = status_registers.ctrl_reg6_xl.address;
 	buf[1] = val;
@@ -1067,7 +1073,7 @@ static int lsm9ds1_acc_update_fs_range(struct lsm9ds1_acc_gyr_status *stat,
 	if (err < 0)
 		goto error;
 
-	status_registers.ctrl_reg6_xl.resume_val = val;
+	status_registers.ctrl_reg6_xl.resume_value = val;
 	stat->sensitivity_acc = sensitivity;
 
 	return err;
@@ -1119,7 +1125,7 @@ static int lsm9ds1_gyr_update_fs_range(struct lsm9ds1_acc_gyr_status *stat,
 	if (err < 0)
 		goto error;
 
-	status_registers.ctrl_reg1_g.resume_val = updated_val;
+	status_registers.ctrl_reg1_g.resume_value = updated_val;
 	stat->sensitivity_gyr = sensitivity;
 
 error:
@@ -1141,7 +1147,7 @@ static int lsm9ds1_acc_update_odr(struct lsm9ds1_acc_gyr_status *stat,
 
 	buf[1] = LSM9DS1_ACC_ODR_MASK & lsm9ds1_acc_odr_table[i].value;
 		buf[1] |= (~LSM9DS1_ACC_ODR_MASK) & 
-				status_registers.ctrl_reg6_xl.resume_val;
+				status_registers.ctrl_reg6_xl.resume_value;
 
 	if (atomic_read(&stat->enabled_acc)) {
 		buf[0] = status_registers.ctrl_reg6_xl.address;
@@ -1151,7 +1157,7 @@ static int lsm9ds1_acc_update_odr(struct lsm9ds1_acc_gyr_status *stat,
 			goto error;
 	}
 
-	status_registers.ctrl_reg6_xl.resume_val = buf[1];
+	status_registers.ctrl_reg6_xl.resume_value = buf[1];
 	stat->ktime_acc = ktime_set(0, MS_TO_NS(poll_interval_ms));
 
 	return err;
@@ -1182,7 +1188,7 @@ static int lsm9ds1_gyr_update_odr(struct lsm9ds1_acc_gyr_status *stat,
 
 	buf[1] = LSM9DS1_GYR_ODR_MASK & lsm9ds1_gyr_odr_table[i].value;
 		buf[1] |= (~LSM9DS1_GYR_ODR_MASK) &
-					status_registers.ctrl_reg1_g.resume_val;
+					status_registers.ctrl_reg1_g.resume_value;
 
 	if (atomic_read(&stat->enabled_gyr)) {
 		/* Set ODR value */
@@ -1192,7 +1198,7 @@ static int lsm9ds1_gyr_update_odr(struct lsm9ds1_acc_gyr_status *stat,
 		if (err < 0)
 			goto error;
 	}
-	status_registers.ctrl_reg1_g.resume_val = buf[1];
+	status_registers.ctrl_reg1_g.resume_value = buf[1];
 	stat->ktime_gyr = ktime_set(0, MS_TO_NS(poll_interval_ms));
 
 	return err;
@@ -1231,7 +1237,7 @@ static int lsm9ds1_acc_update_filter(struct lsm9ds1_acc_gyr_status *stat,
 	if (err < 0)
 		goto error;
 
-	status_registers.ctrl_reg6_xl.resume_val = buf[0];
+	status_registers.ctrl_reg6_xl.resume_value = buf[0];
 
 	updated_val = ((LSM9DS1_ACC_BW_MASK & new_bandwidth) |
 					((~LSM9DS1_ACC_BW_MASK) & buf[0]));
@@ -1243,7 +1249,7 @@ static int lsm9ds1_acc_update_filter(struct lsm9ds1_acc_gyr_status *stat,
 	if (err < 0)
 		goto error;
 
-	status_registers.ctrl_reg6_xl.resume_val = updated_val;
+	status_registers.ctrl_reg6_xl.resume_value = updated_val;
 
 	return err;
 
@@ -1331,11 +1337,18 @@ static int lsm9ds1_acc_get_data(struct lsm9ds1_acc_gyr_status *stat, int *xyz)
 	int i, err = -1;
 	u8 acc_data[6];
 	s32 hw_d[3] = { 0 };
+	u8 int_data[4];
 
 	acc_data[0] = OUT_X_L_XL;
 	err = lsm9ds1_i2c_read(stat, acc_data, 6);
 	if (err < 0)
 		return err;
+
+	// interrupt status
+	int_data[0] = (INT_GEN_SRC_XL);
+	err = lsm9ds1_i2c_read(stat, int_data, 1);
+	if (err < 0)
+		return err;	
 
 	hw_d[0] = ((s32)( (s16)((acc_data[1] << 8) | (acc_data[0]))));
 	hw_d[1] = ((s32)( (s16)((acc_data[3] << 8) | (acc_data[2]))));
@@ -1350,6 +1363,7 @@ static int lsm9ds1_acc_get_data(struct lsm9ds1_acc_gyr_status *stat, int *xyz)
 				stat->pdata_main->rot_matrix[1][i] * hw_d[1] +
 				stat->pdata_main->rot_matrix[2][i] * hw_d[2];
 	}
+	xyz[3] = (s32)((int_data[0]));
 
 	return err;
 }
@@ -1359,6 +1373,7 @@ static int lsm9ds1_gyr_get_data(struct lsm9ds1_acc_gyr_status *stat, int *xyz)
 	int i, err = 1;
 	u8 gyro_data[6];
 	s32 hw_d[3] = { 0 };
+	u8 int_data[4];
 
 	gyro_data[0] = OUT_X_L_G;
 	err = lsm9ds1_i2c_read(stat, gyro_data, 6);
@@ -1379,6 +1394,12 @@ static int lsm9ds1_gyr_get_data(struct lsm9ds1_acc_gyr_status *stat, int *xyz)
 		LSM9DS1_GYR_DEV_NAME, gyro_data[5], gyro_data[4], hw_d[2]);
 #endif
 
+	// interrupt status
+	int_data[0] = (INT_GEN_SRC_G);
+	err = lsm9ds1_i2c_read(stat, int_data, 1);
+	if (err < 0)
+		return err;	
+
 	hw_d[0] = hw_d[0] * stat->sensitivity_gyr;
 	hw_d[1] = hw_d[1] * stat->sensitivity_gyr;
 	hw_d[2] = hw_d[2] * stat->sensitivity_gyr;
@@ -1388,6 +1409,7 @@ static int lsm9ds1_gyr_get_data(struct lsm9ds1_acc_gyr_status *stat, int *xyz)
 				stat->pdata_main->rot_matrix[1][i] * hw_d[1] +
 				stat->pdata_main->rot_matrix[2][i] * hw_d[2];
 	}
+	xyz[3] = (s32)((int_data[0]));
 
 	return err;
 }
@@ -1398,6 +1420,8 @@ static void lsm9ds1_acc_report_values(struct lsm9ds1_acc_gyr_status *stat,
 	input_report_abs(stat->input_dev_acc, ABS_X, xyz[0]);
 	input_report_abs(stat->input_dev_acc, ABS_Y, xyz[1]);
 	input_report_abs(stat->input_dev_acc, ABS_Z, xyz[2]);
+	input_report_abs(stat->input_dev_acc, ABS_MISC, (xyz[3]&0xFF) + ((xyz[2]&0xFF)<<8)); 
+	// make sure misc changes and thus output event
 	input_sync(stat->input_dev_acc);
 }
 
@@ -1407,6 +1431,8 @@ static void lsm9ds1_gyr_report_values(struct lsm9ds1_acc_gyr_status *stat,
 	input_report_abs(stat->input_dev_gyr, ABS_X, xyz[0]);
 	input_report_abs(stat->input_dev_gyr, ABS_Y, xyz[1]);
 	input_report_abs(stat->input_dev_gyr, ABS_Z, xyz[2]);
+	input_report_abs(stat->input_dev_gyr, ABS_MISC, (xyz[3]&0xFF) + ((xyz[2]&0xFF)<<8)); 
+	// make sure misc changes and thus output event
 	input_sync(stat->input_dev_gyr);
 }
 
@@ -1431,6 +1457,7 @@ static int lsm9ds1_acc_input_init(struct lsm9ds1_acc_gyr_status *stat)
 	input_set_drvdata(stat->input_dev_acc, stat);
 
 	set_bit(EV_ABS, stat->input_dev_acc->evbit);
+	input_set_capability(stat->input_dev_acc, EV_ABS, ABS_MISC);  
 
 	input_set_abs_params(stat->input_dev_acc, ABS_X, ACC_MAX_NEG,
 						ACC_MAX_POS, FUZZ, FLAT);
@@ -1438,6 +1465,8 @@ static int lsm9ds1_acc_input_init(struct lsm9ds1_acc_gyr_status *stat)
 						ACC_MAX_POS, FUZZ, FLAT);
 	input_set_abs_params(stat->input_dev_acc, ABS_Z,ACC_MAX_NEG,
 						ACC_MAX_POS, FUZZ, FLAT);
+	input_set_abs_params(stat->input_dev_acc, ABS_MISC, 0,
+						0xFFFFFFFF, FUZZ, FLAT);
 
 	err = input_register_device(stat->input_dev_acc);
 	if (err) {
@@ -1473,6 +1502,7 @@ static int lsm9ds1_gyr_input_init(struct lsm9ds1_acc_gyr_status *stat)
 	input_set_drvdata(stat->input_dev_gyr, stat);
 
 	set_bit(EV_ABS, stat->input_dev_gyr->evbit);
+	input_set_capability(stat->input_dev_gyr, EV_ABS, ABS_MISC); 
 
 	input_set_abs_params(stat->input_dev_gyr, ABS_X, GYR_MAX_NEG,
 							GYR_MAX_POS, 0, 0);
@@ -1480,6 +1510,8 @@ static int lsm9ds1_gyr_input_init(struct lsm9ds1_acc_gyr_status *stat)
 							GYR_MAX_POS, 0, 0);
 	input_set_abs_params(stat->input_dev_gyr, ABS_Z, GYR_MAX_NEG,
 							GYR_MAX_POS, 0, 0);
+	input_set_abs_params(stat->input_dev_gyr, ABS_MISC, 0,
+						0xFFFFFFFF, FUZZ, FLAT);
 
 
 	err = input_register_device(stat->input_dev_gyr);
@@ -1594,6 +1626,9 @@ static ssize_t attr_get_range_acc(struct kobject *kobj,
 	case LSM9DS1_ACC_FS_8G:
 		range = 8;
 		break;
+	case LSM9DS1_ACC_FS_16G:
+		range = 16;
+		break;
 	}
 
 	return sprintf(buf, "%d\n", range);
@@ -1621,6 +1656,9 @@ static ssize_t attr_set_range_acc(struct kobject *kobj,
 		break;
 	case 8:
 		range = LSM9DS1_ACC_FS_8G;
+		break;
+	case 16:
+		range = LSM9DS1_ACC_FS_16G;
 		break;
 	default:
 		dev_err(&stat->client->dev, "accelerometer invalid range "
@@ -1859,29 +1897,556 @@ static ssize_t attr_set_range_gyr(struct kobject *kobj,
 	return size;
 }
 
-static struct kobj_attribute poll_attr_acc =
-	__ATTR(pollrate_ms, 0664, attr_get_polling_rate_acc, 
-						attr_set_polling_rate_acc);
+// universal read and write function
+static u32 attr_get_reg_8bit(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf, u8 addr, u8 mask)
+{
+	struct device *dev = to_dev(kobj->parent);
+	struct lsm9ds1_acc_gyr_status *stat = dev_get_drvdata(dev);
+	u32 val;
+	u8 config[2];
+	int err;
+
+	mutex_lock(&stat->lock);
+	config[0] = addr;
+	err = lsm9ds1_i2c_read(stat,config,1);
+
+	val = (config[0] & mask); //stat->int1_ctrl;
+	if (addr == INT_GEN_THS_X_XL || addr == INT_GEN_THS_Y_XL || addr == INT_GEN_THS_Z_XL)
+	{
+		val = val * stat->sensitivity_acc;
+	}
+	mutex_unlock(&stat->lock);
+
+	return val;
+}
+
+static u8 attr_set_reg_8bit(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, u8 addr, u8 mask, u8 base)
+{
+	struct device *dev = to_dev(kobj->parent);
+	struct lsm9ds1_acc_gyr_status *stat = dev_get_drvdata(dev);
+	unsigned long val;
+	int err;
+	u8 config[2];
+	u8 cur;
+	u8 setval;
+
+	mutex_lock(&stat->lock);
+	if (kstrtoul(buf, base, &val))
+		return -EINVAL;
+
+	if (addr == INT_GEN_THS_X_XL || addr == INT_GEN_THS_Y_XL || addr == INT_GEN_THS_Z_XL)
+	{
+		val = val / stat->sensitivity_acc;
+	}
+
+	config[0] = addr;
+	err = lsm9ds1_i2c_read(stat,config,1);
+	cur = (config[0] & mask);
+
+	config[0] = addr;
+	config[1] = (u8)((val & mask) | (cur & (~mask)));
+	err = lsm9ds1_i2c_write(stat,config,1);
+	setval = (u8)(val & mask);
+
+	if (err != 0) {
+		dev_err(&stat->client->dev, "config addr %x failed"
+					"request: %s, discarded\n", addr, buf);
+		return -EINVAL;
+	}	
+	mutex_unlock(&stat->lock);
+
+	return setval;
+}
+
+
+static u32 attr_get_reg_16bit_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf, u8 addr)
+{
+	struct device *dev = to_dev(kobj->parent);
+	struct lsm9ds1_acc_gyr_status *stat = dev_get_drvdata(dev);
+	u32 val;
+	u8 config[2];
+	int err;
+
+	mutex_lock(&stat->lock);
+	config[0] = addr;
+	err = lsm9ds1_i2c_read(stat,config,2);
+
+	val = (u16)((config[0] << 8) | config[1]); //stat->int1_ctrl;
+	val = val * stat->sensitivity_gyr; // only 
+
+	mutex_unlock(&stat->lock);
+
+	return val;
+}
+
+static u16 attr_set_reg_16bit_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, u8 addr, u8 axis)
+{
+	struct device *dev = to_dev(kobj->parent);
+	struct lsm9ds1_acc_gyr_status *stat = dev_get_drvdata(dev);
+	unsigned long val;
+	int err;
+	u8 config[3];
+	u8 msb;
+	u16 setval;
+
+	mutex_lock(&stat->lock);
+	if (kstrtoul(buf, 10, &val))
+		return -EINVAL;
+
+	val = val / stat->sensitivity_gyr; // only 
+
+	if (axis == 0) {
+		config[0] = addr;
+		err = lsm9ds1_i2c_read(stat,config,2);
+		msb = (config[0] & 0x80);
+	} else {
+		msb = 0;
+	}
+
+	config[0] = addr;
+	config[1] = (((val & 0x7F00) >> 8) | msb);  // 7F00: bit 8 needs to be 0
+	config[2] = (val & 0x00FF);
+	err = lsm9ds1_i2c_write(stat,config,2);
+
+	setval = (u16)(val & 0x7FFF);
+
+	if (err != 0) {
+		dev_err(&stat->client->dev, "config addr %x failed"
+					"request: %s, discarded\n", addr, buf);
+		return -EINVAL;
+	}	
+	mutex_unlock(&stat->lock);
+
+	return setval;
+}
+
+// interrupt port config
+static ssize_t attr_get_int1_config(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf)
+{
+	u8 val = (u8)attr_get_reg_8bit(kobj, attr, buf, INT1_CTRL, 0xFF);
+
+	return sprintf(buf, "0x%x\n", val);
+}
+
+static ssize_t attr_set_int1_config(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, size_t size)
+{
+	u8 val = attr_set_reg_8bit(kobj, attr, buf, INT1_CTRL, 0xFF, 16);
+
+	status_registers.int1_ctrl.resume_value = (u8)val;
+	//dev_info(&stat->client->dev, "int1 control set to: %x\n", val);
+
+	return size;
+}
+
+static ssize_t attr_get_int2_config(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf)
+{
+	u8 val = (u8)attr_get_reg_8bit(kobj, attr, buf, INT2_CTRL, 0xFF);
+	
+	return sprintf(buf, "0x%x\n", val);
+}
+
+static ssize_t attr_set_int2_config(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, size_t size)
+{
+	u8 val = attr_set_reg_8bit(kobj, attr, buf, INT2_CTRL, 0xFF, 16);
+
+	status_registers.int2_ctrl.resume_value = (u8)val;
+	//dev_info(&stat->client->dev, "int2 control set to: %x\n", val);
+
+	return size;
+}
+
+// gyro interrupt
+static ssize_t attr_get_intdcrm_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf)
+{
+	u8 val = (u8)attr_get_reg_8bit(kobj, attr, buf, INT_GEN_THS_XH_G, 
+		0x80);
+	
+	return sprintf(buf, "0x%x\n", val);
+}
+
+static ssize_t attr_set_intdcrm_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, size_t size)
+{
+	u8 val = attr_set_reg_8bit(kobj, attr, buf, INT_GEN_THS_XH_G, 
+		0x80, 16);
+
+	status_registers.int_gen_ths_xh_g.resume_value = 
+		(status_registers.int_gen_ths_xh_g.resume_value & (0x7F))
+		| (val & 0x80);
+
+	//dev_info(&stat->client->dev, "dcrm (int_gen_ths_xh_g) set to: %x\n", 
+	//	(status_registers.int_gen_ths_xh_g.resume_value & 0x80));
+
+	return size;
+}
+// --
+static ssize_t attr_get_intconfig_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf)
+{
+	u8 val = (u8)attr_get_reg_8bit(kobj, attr, buf, INT_GEN_CFG_G, 0xFF);
+	
+	return sprintf(buf, "0x%x\n", val);
+}
+
+static ssize_t attr_set_intconfig_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, size_t size)
+{
+	u8 val = attr_set_reg_8bit(kobj, attr, buf, INT_GEN_CFG_G, 0xFF, 16);
+
+	status_registers.int_gen_cfg_g.resume_value = (u8)val;
+	//dev_info(&stat->client->dev, "int_gen_cfg_g set to: %x\n", val);
+
+	return size;
+}
+// --
+static ssize_t attr_get_intthsX_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf)
+{
+	u32 val = attr_get_reg_16bit_gyr(kobj, attr, buf, INT_GEN_THS_XH_G);
+	
+	return sprintf(buf, "%d\n", val);
+}
+
+static ssize_t attr_set_intthsX_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, size_t size)
+{
+	u16 val = attr_set_reg_16bit_gyr(kobj, attr, buf, INT_GEN_THS_XH_G, 0);
+
+	status_registers.int_gen_ths_xh_g.resume_value = 
+		(status_registers.int_gen_ths_xh_g.resume_value & (0x80)) |
+		((u8)((val & 0x7F00) >> 8));
+	status_registers.int_gen_ths_xl_g.resume_value = (u8)(val & 0x00FF);
+	//dev_info(&stat->client->dev, "int_thsX_g set to: %d\n", val);
+
+	return size;
+}
+// --
+static ssize_t attr_get_intthsY_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf)
+{
+	u32 val = attr_get_reg_16bit_gyr(kobj, attr, buf, INT_GEN_THS_YH_G);
+	
+	return sprintf(buf, "%d\n", val);
+}
+
+static ssize_t attr_set_intthsY_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, size_t size)
+{
+	u16 val = attr_set_reg_16bit_gyr(kobj, attr, buf, INT_GEN_THS_YH_G, 1);
+
+	status_registers.int_gen_ths_yh_g.resume_value = (u8)((val & 0x7F00) >> 8);
+	status_registers.int_gen_ths_yl_g.resume_value = (u8)(val & 0x00FF);
+	//dev_info(&stat->client->dev, "int_thsY_g set to: %d\n", val);
+
+	return size;
+}
+// --
+static ssize_t attr_get_intthsZ_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf)
+{
+	u32 val = attr_get_reg_16bit_gyr(kobj, attr, buf, INT_GEN_THS_ZH_G);
+	
+	return sprintf(buf, "%d\n", val);
+}
+
+static ssize_t attr_set_intthsZ_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, size_t size)
+{
+	u16 val = attr_set_reg_16bit_gyr(kobj, attr, buf, INT_GEN_THS_ZH_G, 2);
+
+	status_registers.int_gen_ths_zh_g.resume_value = (u8)((val & 0x7F00) >> 8);
+	status_registers.int_gen_ths_zl_g.resume_value = (u8)(val & 0x00FF);
+	//dev_info(&stat->client->dev, "int_thsZ_g set to: %d\n", val);
+
+	return size;
+}
+// --
+static ssize_t attr_get_intdur_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf)
+{
+	u8 val = attr_get_reg_8bit(kobj, attr, buf, INT_GEN_DUR_G, 
+		INT_GEN_DUR_G_DUR_MASK);
+	
+	return sprintf(buf, "%d\n", val);
+}
+
+static ssize_t attr_set_intdur_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, size_t size)
+{
+	u8 val = attr_set_reg_8bit(kobj, attr, buf, INT_GEN_DUR_G, 
+		INT_GEN_DUR_G_DUR_MASK, 10);
+
+	status_registers.int_gen_dur_g.resume_value = 
+		(status_registers.int_gen_dur_g.resume_value & (~INT_GEN_DUR_G_DUR_MASK))
+		| (val & INT_GEN_DUR_G_DUR_MASK);
+
+	//dev_info(&stat->client->dev, "duration(int_dur_g) set to: %x, %x\n", 
+	//	val, status_registers.int_gen_dur_g.resume_value);
+
+	return size;
+}
+// --
+static ssize_t attr_get_intwait_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf)
+{
+	u8 val = attr_get_reg_8bit(kobj, attr, buf, INT_GEN_DUR_G, 
+		INT_GEN_DUR_G_WAIT_MASK);
+	
+	return sprintf(buf, "0x%x\n", val);
+}
+
+static ssize_t attr_set_intwait_gyr(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, size_t size)
+{
+	u8 val = attr_set_reg_8bit(kobj, attr, buf, INT_GEN_DUR_G, 
+		INT_GEN_DUR_G_WAIT_MASK, 16);
+
+	status_registers.int_gen_dur_g.resume_value = 
+		(status_registers.int_gen_dur_g.resume_value & (~INT_GEN_DUR_G_WAIT_MASK))
+		| (val & INT_GEN_DUR_G_WAIT_MASK);
+
+	//dev_info(&stat->client->dev, "wait(int_dur_g) set to: %x, %x\n", 
+	//	val, status_registers.int_gen_dur_g.resume_value);
+
+	return size;
+}
+// --
+// acc interrrupt
+// --
+static ssize_t attr_get_intconfig_acc(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf)
+{
+	u8 val = (u8)attr_get_reg_8bit(kobj, attr, buf, INT_GEN_CFG_XL, 0xFF);
+	
+	return sprintf(buf, "0x%x\n", val);
+}
+
+static ssize_t attr_set_intconfig_acc(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, size_t size)
+{
+	u8 val = attr_set_reg_8bit(kobj, attr, buf, INT_GEN_CFG_XL, 0xFF, 16);
+	struct device *dev = to_dev(kobj->parent);
+	struct lsm9ds1_acc_gyr_status *stat = dev_get_drvdata(dev);
+
+	status_registers.int_gen_cfg_xl.resume_value = (u8)val;
+
+	dev_info(&stat->client->dev, "int_gen_cfg_xl set to: %x\n", val);
+
+	return size;
+}
+// --
+static ssize_t attr_get_intthsX_acc(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf)
+{
+	u32 val = attr_get_reg_8bit(kobj, attr, buf, INT_GEN_THS_X_XL, 0xFF);
+	
+	return sprintf(buf, "%d\n", val);
+}
+
+static ssize_t attr_set_intthsX_acc(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, size_t size)
+{
+	u8 val = attr_set_reg_8bit(kobj, attr, buf, INT_GEN_THS_X_XL, 0xFF, 10);
+
+	status_registers.int_gen_ths_x_xl.resume_value = (u8)val;
+	//dev_info(&stat->client->dev, "int_gen_ths_x_xl set to: %d\n", val);
+
+	return size;
+}
+// --
+static ssize_t attr_get_intthsY_acc(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf)
+{
+	u32 val = attr_get_reg_8bit(kobj, attr, buf, INT_GEN_THS_Y_XL, 0xFF);
+	
+	return sprintf(buf, "%d\n", val);
+}
+
+static ssize_t attr_set_intthsY_acc(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, size_t size)
+{
+	u8 val = attr_set_reg_8bit(kobj, attr, buf, INT_GEN_THS_Y_XL, 0xFF, 10);
+
+	status_registers.int_gen_ths_y_xl.resume_value = (u8)val;
+	//dev_info(&stat->client->dev, "int_gen_ths_y_xl set to: %d\n", val);
+
+	return size;
+}
+// --
+static ssize_t attr_get_intthsZ_acc(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf)
+{
+	u32 val = attr_get_reg_8bit(kobj, attr, buf, INT_GEN_THS_Z_XL, 0xFF);
+	
+	return sprintf(buf, "%d\n", val);
+}
+
+static ssize_t attr_set_intthsZ_acc(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, size_t size)
+{
+	u8 val = attr_set_reg_8bit(kobj, attr, buf, INT_GEN_THS_Z_XL, 0xFF, 10);
+
+	status_registers.int_gen_ths_z_xl.resume_value = (u8)val;
+	//dev_info(&stat->client->dev, "int_gen_ths_z_xl set to: %d\n", val);
+
+	return size;
+}
+// --
+static ssize_t attr_get_intdur_acc(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf)
+{
+	u8 val = attr_get_reg_8bit(kobj, attr, buf, INT_GEN_DUR_XL, 
+		INT_GEN_DUR_XL_DUR_MASK);
+	
+	return sprintf(buf, "%d\n", val);
+}
+
+static ssize_t attr_set_intdur_acc(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, size_t size)
+{
+	u8 val = attr_set_reg_8bit(kobj, attr, buf, INT_GEN_DUR_XL, 
+		INT_GEN_DUR_XL_DUR_MASK, 10);
+
+	status_registers.int_gen_dur_xl.resume_value = 
+		(status_registers.int_gen_dur_xl.resume_value & (~INT_GEN_DUR_XL_DUR_MASK))
+		| (val & INT_GEN_DUR_XL_DUR_MASK);
+
+	//dev_info(&stat->client->dev, "duration(int_dur_xl) set to: %x, %x\n", 
+	//	val, status_registers.int_gen_dur_xl.resume_value);
+
+	return size;
+}
+// --
+static ssize_t attr_get_intwait_acc(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					char *buf)
+{
+	u8 val = attr_get_reg_8bit(kobj, attr, buf, INT_GEN_DUR_XL, 
+		INT_GEN_DUR_XL_WAIT_MASK);
+	
+	return sprintf(buf, "0x%x\n", val);
+}
+
+static ssize_t attr_set_intwait_acc(struct kobject *kobj,
+					struct kobj_attribute *attr,
+					const char *buf, size_t size)
+{
+	u8 val = attr_set_reg_8bit(kobj, attr, buf, INT_GEN_DUR_XL, 
+		INT_GEN_DUR_XL_WAIT_MASK, 16);
+
+	status_registers.int_gen_dur_xl.resume_value = 
+		(status_registers.int_gen_dur_xl.resume_value & (~INT_GEN_DUR_XL_WAIT_MASK))
+		| (val & INT_GEN_DUR_XL_WAIT_MASK);
+
+	//dev_info(&stat->client->dev, "wait(int_dur_xl) set to: %x, %x\n", 
+	//	val, status_registers.int_gen_dur_xl.resume_value);
+
+	return size;
+}
+
+// ATTRIBUTES
+static struct kobj_attribute poll_attr_acc = 
+	__ATTR(pollrate_ms, 0664, attr_get_polling_rate_acc, attr_set_polling_rate_acc);
 static struct kobj_attribute enable_attr_acc =
 	__ATTR(enable_device, 0664, attr_get_enable_acc, attr_set_enable_acc);
 static struct kobj_attribute fs_attr_acc =
 	__ATTR(range, 0664, attr_get_range_acc, attr_set_range_acc);
 static struct kobj_attribute aa_filter_attr  =
-	__ATTR(anti_aliasing_frequency, 0664, attr_get_aa_filter, 
-							attr_set_aa_filter);
+	__ATTR(anti_aliasing_frequency, 0664, attr_get_aa_filter, attr_set_aa_filter);
 static struct kobj_attribute poll_attr_gyr =
-	__ATTR(pollrate_ms, 0664, attr_get_polling_rate_gyr,
-						attr_set_polling_rate_gyr);
+	__ATTR(pollrate_ms, 0664, attr_get_polling_rate_gyr, attr_set_polling_rate_gyr);
 static struct kobj_attribute enable_attr_gyr =
 	__ATTR(enable_device, 0664, attr_get_enable_gyr, attr_set_enable_gyr);
 static struct kobj_attribute range_attr_gyr =
 	__ATTR(range, 0664, attr_get_range_gyr, attr_set_range_gyr);
+// interrupt port
+static struct kobj_attribute int1_config =
+	__ATTR(int1_config, 0664, attr_get_int1_config, attr_set_int1_config);
+static struct kobj_attribute int2_config =
+	__ATTR(int2_config, 0664, attr_get_int2_config, attr_set_int2_config);	
+// interrupt gyro	
+static struct kobj_attribute int_dcrm_gyr =
+	__ATTR(int_dcrm, 0664, attr_get_intdcrm_gyr, attr_set_intdcrm_gyr);
+static struct kobj_attribute int_config_gyr =
+	__ATTR(int_config, 0664, attr_get_intconfig_gyr, attr_set_intconfig_gyr);
+static struct kobj_attribute int_thsX_gyr =
+	__ATTR(int_ths_x, 0664, attr_get_intthsX_gyr, attr_set_intthsX_gyr);
+static struct kobj_attribute int_thsY_gyr =
+	__ATTR(int_ths_y, 0664, attr_get_intthsY_gyr, attr_set_intthsY_gyr);
+static struct kobj_attribute int_thsZ_gyr =
+	__ATTR(int_ths_z, 0664, attr_get_intthsZ_gyr, attr_set_intthsZ_gyr);		
+static struct kobj_attribute int_dur_gyr =
+	__ATTR(int_duration, 0664, attr_get_intdur_gyr, attr_set_intdur_gyr);
+static struct kobj_attribute int_wait_gyr =
+	__ATTR(int_wait, 0664, attr_get_intwait_gyr, attr_set_intwait_gyr);
+// interrupt acc
+static struct kobj_attribute int_config_acc =
+	__ATTR(int_config, 0664, attr_get_intconfig_acc, attr_set_intconfig_acc);
+static struct kobj_attribute int_thsX_acc =
+	__ATTR(int_ths_x, 0664, attr_get_intthsX_acc, attr_set_intthsX_acc);
+static struct kobj_attribute int_thsY_acc =
+	__ATTR(int_ths_y, 0664, attr_get_intthsY_acc, attr_set_intthsY_acc);
+static struct kobj_attribute int_thsZ_acc =
+	__ATTR(int_ths_z, 0664, attr_get_intthsZ_acc, attr_set_intthsZ_acc);		
+static struct kobj_attribute int_dur_acc =
+	__ATTR(int_duration, 0664, attr_get_intdur_acc, attr_set_intdur_acc);
+static struct kobj_attribute int_wait_acc =
+	__ATTR(int_wait, 0664, attr_get_intwait_acc, attr_set_intwait_acc);
 
 static struct attribute *attributes_acc[] = {
 	&poll_attr_acc.attr,
 	&enable_attr_acc.attr,
 	&fs_attr_acc.attr,
 	&aa_filter_attr.attr,
+	&int_config_acc.attr,
+	&int_thsX_acc.attr,
+	&int_thsY_acc.attr,
+	&int_thsZ_acc.attr,
+	&int_dur_acc.attr,
+	&int_wait_acc.attr,
+	&int1_config.attr,
+	&int2_config.attr,
 	NULL,
 };
 
@@ -1889,6 +2454,13 @@ static struct attribute *attributes_gyr[] = {
 	&poll_attr_gyr.attr,
 	&enable_attr_gyr.attr,
 	&range_attr_gyr.attr,
+	&int_dcrm_gyr.attr,
+	&int_config_gyr.attr,
+	&int_thsX_gyr.attr,
+	&int_thsY_gyr.attr,
+	&int_thsZ_gyr.attr,
+	&int_dur_gyr.attr,
+	&int_wait_gyr.attr,
 	NULL,
 };
 
@@ -1932,7 +2504,7 @@ static void remove_sysfs_interfaces(struct device *dev)
 static void poll_function_work_acc(struct work_struct *input_work_acc)
 {
 	struct lsm9ds1_acc_gyr_status *stat;
-	int xyz[3] = { 0 };
+	int xyz[4] = { 0 };
 	int err;
 
 	stat = container_of((struct work_struct *)input_work_acc,
@@ -1950,7 +2522,7 @@ static void poll_function_work_acc(struct work_struct *input_work_acc)
 static void poll_function_work_gyr(struct work_struct *input_work_gyr)
 {
 	struct lsm9ds1_acc_gyr_status *stat;
-	int xyz[3] = { 0 };
+	int xyz[4] = { 0 };
 	int err;
 
 	stat = container_of((struct work_struct *)input_work_gyr,
@@ -2224,6 +2796,7 @@ static int lsm9ds1_acc_gyr_probe(struct i2c_client *client,
 			goto err_gpio1_valid;
 		}
 		gpio_direction_input(stat->pdata_main->gpio_int1);
+		gpio_export(stat->pdata_main->gpio_int1, false);
 		stat->irq1 = gpio_to_irq(stat->pdata_main->gpio_int1);
 		if(stat->irq1 < 0) {
 			dev_err(&client->dev, "GPIO [%d] cannot be used as "
@@ -2253,6 +2826,7 @@ static int lsm9ds1_acc_gyr_probe(struct i2c_client *client,
 			goto err_gpio2_valid;
 		}
 		gpio_direction_input(stat->pdata_main->gpio_int2);
+		gpio_export(stat->pdata_main->gpio_int2, false);
 		stat->irq2 = gpio_to_irq(stat->pdata_main->gpio_int2);
 		if(stat->irq2 < 0) {
 			dev_err(&client->dev, "GPIO [%d] cannot be used as "

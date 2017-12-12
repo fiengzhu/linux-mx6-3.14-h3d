@@ -73,6 +73,7 @@
 #define LSM9DS1_ACC_FS_2G 		(0x00)	/* Full scale 2g */
 #define LSM9DS1_ACC_FS_4G 		(0x10)	/* Full scale 4g */
 #define LSM9DS1_ACC_FS_8G 		(0x18)	/* Full scale 8g */
+#define LSM9DS1_ACC_FS_16G 		(0x08)	/* Full scale 16g */
 
 /* Accelerometer Anti-Aliasing Filter */
 #define LSM9DS1_ACC_BW_408		(0X00)
