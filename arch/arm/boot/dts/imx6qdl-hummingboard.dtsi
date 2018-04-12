@@ -159,9 +159,9 @@
 	pinctrl-0 = <&pinctrl_hummingboard_i2c1>;
 	status = "okay";
 
-	tca9554: gpio@38 {
-		compatible = "ti,tca9554";
-		reg = <0x38>;
+	pcf8574: gpio@20 {
+		compatible = "nxp,pcf8574";
+		reg = <0x20>;
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&pinctrl_hummingboard_gpio2_19>;
