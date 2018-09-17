@@ -1,0 +1,18 @@
+1. boot.cmd and boot.scr: 
+	a. copy those files to /boot directory
+2. 3.14.14.usbotg.tar.gz: 
+	a. copy to /lib/modules
+	b. remove old modules: rm -fr 3.14.14+
+	c. extract new modules: tar zxvf 3.14.14.usbotg.tar.gz
+3. zImage_usbotg:
+	a. copy to /boot
+	b. link to zImage: ln -sf zImage_usbotg zImage
+	c. make sure you have a link zImage pointing to zImage_usbotg
+4. usbotg_dtb.tar.gz:
+	a. go to dtb folder: cd /boot/dtb
+	b. delete old dtb files: rm *.dtb*
+	c. copy to /boot/dtb: cp usbotg_dtb.tar.gz /boot/dtb
+	d. extract: tar zxvf usbotg_dtb.tar.gz
+5. setup environment
+	a. setup_g_storage: use the command inside to setup which drive you want to export
+	b. setup_otg_pin: use GPIO to control the role of USB. value '1' means peripheral mode
