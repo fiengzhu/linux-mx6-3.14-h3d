@@ -1,0 +1,1 @@
+echo "/dev/mmcblk0p2" > /sys/bus/platform/devices/2184000.usb/ci_hdrc.0/gadget/lun0/file
