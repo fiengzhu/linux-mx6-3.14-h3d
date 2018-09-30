@@ -342,6 +342,9 @@ int hw_wait_reg(struct ci_hdrc *ci, enum ci_hw_regs reg, u32 mask,
 		if (time_after(jiffies, elapse)) {
 			dev_err(ci->dev, "timeout waiting for %08x in %d\n",
 					mask, reg);
+
+			dev_err(ci->dev, "timeout caused by req%d, cur%d, elapse%d\n",
+					value, hw_read(ci, reg, mask), elapse);
 			return -ETIMEDOUT;
 		}
 		msleep(20);

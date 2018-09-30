@@ -7135,6 +7135,7 @@ alias usb:v0711p0902d*dc*dsc*dp*ic*isc*ip*in* sisusbvga
 alias usb:v0711p0901d*dc*dsc*dp*ic*isc*ip*in* sisusbvga
 alias usb:v0711p0900d*dc*dsc*dp*ic*isc*ip*in* sisusbvga
 alias usb:v0711p0550d*dc*dsc*dp*ic*isc*ip*in* sisusbvga
+alias usbfunc:mass_storage usb_f_mass_storage
 alias usb:v*p*d*dc*dsc*dp*icEFisc03ip01in* wusb_cbaf
 alias char-major-166-* cdc_acm
 alias usb:v*p*d*dc*dsc*dp*ic02isc02ip06in* cdc_acm

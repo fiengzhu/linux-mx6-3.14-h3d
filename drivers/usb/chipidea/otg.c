@@ -36,6 +36,11 @@ enum ci_role ci_otg_role(struct ci_hdrc *ci)
 		? CI_ROLE_GADGET
 		: CI_ROLE_HOST;
 
+	if (sts & OTGSC_ID)
+	{dev_info(ci->dev, "otg role detecting: gadget");}
+	else
+	{dev_info(ci->dev, "otg role detecting: host");}
+
 	return role;
 }
 
@@ -43,15 +48,23 @@ void ci_handle_vbus_change(struct ci_hdrc *ci)
 {
 	u32 otgsc;
 
-	if (!ci->is_otg)
+	if (!ci->is_otg){
+		dev_info(ci->dev, "ci->is_otg is 0, quit vbus_change");
 		return;
+	}
 
 	otgsc = hw_read(ci, OP_OTGSC, ~0);
 
 	if (otgsc & OTGSC_BSV)
+	{
+		dev_info(ci->dev, "vbus change: connecting vbus");
 		usb_gadget_vbus_connect(&ci->gadget);
+	}
 	else
+	{
+		dev_info(ci->dev, "vbus change: disconnecting vbus");
 		usb_gadget_vbus_disconnect(&ci->gadget);
+	}
 }
 
 #define CI_VBUS_STABLE_TIMEOUT_MS 5000
@@ -59,8 +72,9 @@ static void ci_handle_id_switch(struct ci_hdrc *ci)
 {
 	enum ci_role role = ci_otg_role(ci);
 
-	if (role != ci->role) {
-		dev_dbg(ci->dev, "switching from %s to %s\n",
+	if (role != ci->role) 
+	{
+		dev_info(ci->dev, "switching from %s to %s\n",
 			ci_role(ci)->name, ci->roles[role]->name);
 
 		ci_role_stop(ci);
@@ -68,6 +82,12 @@ static void ci_handle_id_switch(struct ci_hdrc *ci)
 		hw_wait_reg(ci, OP_OTGSC, OTGSC_BSV, 0,
 				CI_VBUS_STABLE_TIMEOUT_MS);
 		ci_role_start(ci, role);
+
+		if (ci->role == CI_ROLE_GADGET)
+			ci_handle_vbus_change(ci);
+
+		dev_info(ci->dev, "switching to %s finished\n",
+			ci_role(ci)->name, ci->roles[role]->name);
 	}
 }
 
@@ -89,7 +109,9 @@ static void ci_otg_event(struct ci_hdrc *ci)
 		pm_runtime_get_sync(ci->dev);
 		ci_handle_id_switch(ci);
 		pm_runtime_put_sync(ci->dev);
-	} else if (ci->b_sess_valid_event) {
+	} //else 
+
+	if (ci->b_sess_valid_event) {
 		ci->b_sess_valid_event = false;
 		pm_runtime_get_sync(ci->dev);
 		ci_handle_vbus_change(ci);
